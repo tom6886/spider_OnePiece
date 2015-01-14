@@ -37,9 +37,15 @@ class CommicGet(threading.Thread):
 
     def getJpg(self):
         count = 1
-        os.makedirs(r'F:/image/第'+str(self.lesson)+'话')
+        dirName = r'F:/image/第%s话'%self.lesson
+        if(not os.path.isdir(dirName)):
+            os.makedirs(dirName)
         for m in re.finditer(r'(/Pic/OnlineComic1/[\w./]+.jpg)', str(self.soup)):       
             sName = 'F:/image/第'+str(self.lesson)+'话/第' + str(self.lesson) + '话第'+str(count)+'页.jpg'
+            if os.path.exists(sName):
+                print("%s 已存在，跳过"%sName)
+                count += 1
+                continue
             print('正在下载第'+str(self.lesson)+'话第'+str(count)+'页, 并保存为'+sName)
             while(True):
                 try:
@@ -74,7 +80,7 @@ class CommicGet(threading.Thread):
         try:
             req = opener.open(self.url).read()
         except Exception as e:
-            getProxy()
+            self.getProxy()
         print('获取代理 '+proxy)    
 
     def run(self):
