@@ -11,29 +11,35 @@ from bs4 import BeautifulSoup
 proxyList = []
 
 class CommicGet(threading.Thread):
-    def __init__(self,url,lesson):
+    def __init__(self,url,lessons):
         threading.Thread.__init__(self)
         self.url = url
         self.timeout = 5
-        self.lesson = lesson
+        self.lessons = lessons
 
     def getSoup(self):
-        print('开始下载第'+str(self.lesson)+'话')
-        self.num = self.getNum()
-        d_url = self.url + 'Utility/2/'+self.num+'j.js'
-        #req = urllib.request.Request(url=d_url, headers=headers)  
-        #response = request.urlopen(req)
-        while(True):
-            self.getProxy()
-            try:
-                html = self.opener.open(d_url,timeout=self.timeout).read()
-                break
-            except Exception as e:
-                print(e)
-                print('连接出错，更换代理')
-        soup = BeautifulSoup(html)
-        self.soup = soup
-        self.getJpg()
+        for i in self.lessons:
+            if(i<41):
+                self.title = '第%s卷'%i
+            else:
+                self.title = '第%s话'%i
+            print('开始下载%s'%self.title)
+            self.num = self.getNum()
+            d_url = self.url + 'Utility/2/'+self.num+'j.js'
+            #print(d_url)
+            #req = urllib.request.Request(url=d_url, headers=headers)  
+            #response = request.urlopen(req)
+            while(True):
+                self.getProxy()
+                try:
+                    html = self.opener.open(d_url,timeout=self.timeout).read()
+                    break
+                except Exception as e:
+                    print(e)
+                    print('连接出错，更换代理')
+            soup = BeautifulSoup(html)
+            self.soup = soup
+            self.getJpg()
 
     def getJpg(self):
         count = 1
@@ -63,11 +69,12 @@ class CommicGet(threading.Thread):
         print('第'+str(self.lesson)+'话下载完毕')
 
     def getNum(self):
-        if(i<10):
+        print(self.lesson)
+        if(self.lesson<10):
             return '00' + str(self.lesson)
-        if(9<i<100):
+        elif(9 < self.lesson < 100):
             return '0' + str(self.lesson)
-        if(99<i<1000):
+        else:
             return str(self.lesson)
 
     def getProxy(self):
@@ -89,8 +96,8 @@ class CommicGet(threading.Thread):
 if __name__ == '__main__':
     getThreads = []
     url = 'http://comic.sfacg.com/'
-    begin = int(input(u'请输入开始的回数：\n'))
-    end = int(input(u'请输入结束的回数：\n'))
+    import Numbers
+    numbers = Numbers.getNumbers()
     hasProxy = os.path.isfile('proxy_list.txt')
     if(not hasProxy):
         print(u'代理文件不存在，开始获取代理')
@@ -99,9 +106,9 @@ if __name__ == '__main__':
 for line in open('proxy_list.txt').readlines():
     proxyList.append(line.strip('\n'))
 
-#为每一话开启一个线程负责抓取
-for i in range(begin,end+1):
-    t = CommicGet(url,i)
+#开启20个线程负责抓取，每个线程抓取一份
+for i in range(20):
+    t = CommicGet(url,numbers[((len(numbers)+19)//20) * i:((len(numbers)+19)//20) * (i+1)])
     getThreads.append(t)
 
 for i in range(len(getThreads)):
