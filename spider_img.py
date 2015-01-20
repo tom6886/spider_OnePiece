@@ -24,8 +24,8 @@ class CommicGet(threading.Thread):
             else:
                 self.title = '第%s话'%i
             print('开始下载%s'%self.title)
-            self.num = self.getNum()
-            d_url = self.url + 'Utility/2/'+self.num+'j.js'
+            self.num = self.getNum(i)
+            d_url = self.url + 'Utility/2/'+self.num+'.js'
             #print(d_url)
             #req = urllib.request.Request(url=d_url, headers=headers)  
             #response = request.urlopen(req)
@@ -43,16 +43,17 @@ class CommicGet(threading.Thread):
 
     def getJpg(self):
         count = 1
-        dirName = r'F:/image/第%s话'%self.lesson
+        dirName = r'F:/image/%s'%self.title
         if(not os.path.isdir(dirName)):
             os.makedirs(dirName)
-        for m in re.finditer(r'(/Pic/OnlineComic1/[\w./]+.jpg)', str(self.soup)):       
-            sName = 'F:/image/第'+str(self.lesson)+'话/第' + str(self.lesson) + '话第'+str(count)+'页.jpg'
+        #print(str(self.soup))
+        for m in re.finditer(r'(/Pic/OnlineComic1/[\w./]+)', str(self.soup)):
+            sName = 'F:/image/%s/%s第%s页.jpg'%(self.title,self.title,count)
             if os.path.exists(sName):
                 print("%s 已存在，跳过"%sName)
                 count += 1
                 continue
-            print('正在下载第'+str(self.lesson)+'话第'+str(count)+'页, 并保存为'+sName)
+            print('正在下载%s第%s页, 并保存为%s'%(self.title,count,sName))
             while(True):
                 try:
                     page = self.opener.open(self.url+str(m.group(1)),timeout=self.timeout).read()
@@ -66,16 +67,15 @@ class CommicGet(threading.Thread):
                 file.write(page)
             file.close()
             count += 1
-        print('第'+str(self.lesson)+'话下载完毕')
+        print('%s下载完毕'%self.title)
 
-    def getNum(self):
-        print(self.lesson)
-        if(self.lesson<10):
-            return '00' + str(self.lesson)
-        elif(9 < self.lesson < 100):
-            return '0' + str(self.lesson)
+    def getNum(self,i):
+        if(i<10):
+            return '00%sj'%i
+        elif(9 < i < 100):
+            return '0%sj'%i
         else:
-            return str(self.lesson)
+            return str(i)
 
     def getProxy(self):
         cookies = request.HTTPCookieProcessor()
